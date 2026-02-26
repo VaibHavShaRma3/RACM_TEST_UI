@@ -810,6 +810,7 @@ td.col-source-quote {
 td.col-extraction-confidence { font-weight: 700; text-align: center; }
 td.col-extraction-confidence.extracted { color: #059669; background: var(--success-subtle); }
 td.col-extraction-confidence.inferred { color: #b45309; background: var(--warning-subtle); }
+td.col-extraction-confidence.recommended { color: var(--purple); background: var(--purple-subtle); }
 td.col-extraction-confidence.partial { color: var(--text-muted); background: var(--surface-raised); }
 
 /* ─── Modal ──────────────────────────────────────────── */

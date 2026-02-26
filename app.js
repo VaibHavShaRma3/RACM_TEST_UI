@@ -784,6 +784,7 @@ function renderRows(entries) {
         const lower = (pendingEdits[editKey] !== undefined ? pendingEdits[editKey] : val).toLowerCase();
         if (lower === 'extracted') td.classList.add('extracted');
         else if (lower === 'inferred') td.classList.add('inferred');
+        else if (lower === 'recommended') td.classList.add('recommended');
         else if (lower === 'partial') td.classList.add('partial');
       }
 
