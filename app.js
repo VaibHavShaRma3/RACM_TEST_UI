@@ -70,6 +70,7 @@ const $pageInfo = document.getElementById('page-info');
 const $btnPrevPage = document.getElementById('btn-prev-page');
 const $btnNextPage = document.getElementById('btn-next-page');
 const $uploadSection = document.getElementById('upload-section');
+const $elapsedTime = document.getElementById('elapsed-time');
 
 // ─── State ──────────────────────────────────────────────────────────────────
 let selectedFile = null;
@@ -94,6 +95,10 @@ let currentPageNum = 0;
 
 // Inline editing state
 let pendingEdits = {};
+
+// Elapsed timer state
+let processingStartTime = null;
+let elapsedTimer = null;
 
 const PHASE_ORDER = ['extracting', 'chunking', 'analyzing', 'consolidating', 'deduplicating', 'summarizing'];
 
@@ -136,6 +141,34 @@ function formatBytes(bytes) {
   if (bytes < 1024) return bytes + ' B';
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function formatElapsed(ms) {
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  if (h > 0) return h + 'h ' + m + 'm ' + s + 's';
+  if (m > 0) return m + 'm ' + s + 's';
+  return s + 's';
+}
+
+function startElapsedTimer() {
+  processingStartTime = Date.now();
+  $elapsedTime.textContent = '0s';
+  elapsedTimer = setInterval(() => {
+    $elapsedTime.textContent = formatElapsed(Date.now() - processingStartTime);
+  }, 1000);
+}
+
+function stopElapsedTimer() {
+  if (elapsedTimer) {
+    clearInterval(elapsedTimer);
+    elapsedTimer = null;
+  }
+  if (processingStartTime) {
+    $elapsedTime.textContent = formatElapsed(Date.now() - processingStartTime);
+  }
 }
 
 function escapeHtml(str) {
@@ -337,6 +370,8 @@ $btnUpload.addEventListener('click', async () => {
     $progressMsg.textContent = 'Waiting...';
     $progressBar.style.width = '0%';
     $detailMsg.textContent = '';
+    $elapsedTime.textContent = '';
+    $elapsedTime.classList.remove('elapsed-done', 'elapsed-fail');
     resetPhaseSteps();
 
     // Reset log state
@@ -350,6 +385,9 @@ $btnUpload.addEventListener('click', async () => {
     // Lock upload during processing
     isProcessing = true;
     $btnUpload.disabled = true;
+
+    // Start elapsed timer
+    startElapsedTimer();
 
     // Hide results and summary from previous run
     $resultsSection.classList.add('hidden');
@@ -381,12 +419,16 @@ $btnCancelJob.addEventListener('click', async () => {
     }
     isProcessing = false;
     $btnUpload.disabled = !selectedFile;
+    stopElapsedTimer();
+    const totalTime = processingStartTime ? formatElapsed(Date.now() - processingStartTime) : '';
+    $elapsedTime.textContent = totalTime ? 'Cancelled after ' + totalTime : '';
+    $elapsedTime.classList.add('elapsed-fail');
 
     // Update UI to show cancelled state
     $phaseBadge.textContent = 'cancelled';
     $phaseBadge.className = 'phase-badge failed';
     $progressMsg.textContent = 'Cancelled by user';
-    addLogEntry('system', 'Job cancelled by user', 'error');
+    addLogEntry('system', 'Job cancelled by user' + (totalTime ? ' (' + totalTime + ')' : ''), 'error');
 
     // After 2s, hide progress and show upload
     setTimeout(() => {
@@ -478,14 +520,22 @@ function startPolling(jobId) {
         pollTimer = null;
         isProcessing = false;
         $btnUpload.disabled = !selectedFile;
-        addLogEntry('done', 'Job completed successfully!', 'complete');
+        stopElapsedTimer();
+        const totalTime = processingStartTime ? formatElapsed(Date.now() - processingStartTime) : '';
+        $elapsedTime.textContent = totalTime ? 'Completed in ' + totalTime : '';
+        $elapsedTime.classList.add('elapsed-done');
+        addLogEntry('done', 'Job completed successfully!' + (totalTime ? ' (' + totalTime + ')' : ''), 'complete');
         fetchResults(jobId);
       } else if (phase === 'failed') {
         clearInterval(pollTimer);
         pollTimer = null;
         isProcessing = false;
         $btnUpload.disabled = !selectedFile;
-        addLogEntry('error', 'Job failed: ' + msg, 'error');
+        stopElapsedTimer();
+        const totalTime = processingStartTime ? formatElapsed(Date.now() - processingStartTime) : '';
+        $elapsedTime.textContent = totalTime ? 'Failed after ' + totalTime : '';
+        $elapsedTime.classList.add('elapsed-fail');
+        addLogEntry('error', 'Job failed: ' + msg + (totalTime ? ' (' + totalTime + ')' : ''), 'error');
         showError('Job failed: ' + msg);
       }
     } catch (e) {

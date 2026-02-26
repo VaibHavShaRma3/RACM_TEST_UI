@@ -533,6 +533,18 @@ body {
 
 .progress-msg { font-size: 0.75rem; color: var(--text-secondary); }
 
+/* Elapsed Timer */
+.elapsed-time {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  letter-spacing: 0.02em;
+}
+
+.elapsed-time.elapsed-done { color: var(--success); }
+.elapsed-time.elapsed-fail { color: var(--error); }
+
 /* Detail Message */
 .detail-msg {
   margin-top: 0.625rem;
