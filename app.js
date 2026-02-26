@@ -28,6 +28,7 @@ const $errorBanner = document.getElementById('error-banner');
 const $dropZone = document.getElementById('drop-zone');
 const $fileInput = document.getElementById('file-input');
 const $fileNameDisplay = document.getElementById('file-name-display');
+const $fileChipText = document.getElementById('file-chip-text');
 const $promptInput = document.getElementById('prompt-input');
 const $btnUpload = document.getElementById('btn-upload');
 const $progressSection = document.getElementById('progress-section');
@@ -36,6 +37,7 @@ const $progressFileName = document.getElementById('progress-file-name');
 const $phaseBadge = document.getElementById('phase-badge');
 const $progressMsg = document.getElementById('progress-msg');
 const $progressBar = document.getElementById('progress-bar');
+const $progressGlow = document.getElementById('progress-glow');
 const $detailMsg = document.getElementById('detail-msg');
 const $etaDisplay = document.getElementById('eta-display');
 const $activityLog = document.getElementById('activity-log');
@@ -67,6 +69,8 @@ let columnFilters = {};
 let lastDetailMsg = '';
 let lastProgressMsg = '';
 let lastPhase = '';
+
+const PHASE_ORDER = ['extracting', 'chunking', 'analyzing', 'consolidating', 'deduplicating', 'summarizing'];
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 function getBaseUrl() {
@@ -134,6 +138,35 @@ function stopEtaCountdown() {
   }
   currentEtaSeconds = 0;
   $etaDisplay.classList.add('hidden');
+}
+
+// ─── Phase Steps ──────────────────────────────────────────────────────────
+function updatePhaseSteps(currentPhase) {
+  const currentIdx = PHASE_ORDER.indexOf(currentPhase);
+  document.querySelectorAll('#phase-steps .step').forEach(function(stepEl) {
+    var stepPhase = stepEl.dataset.phase;
+    var stepIdx = PHASE_ORDER.indexOf(stepPhase);
+    stepEl.classList.remove('active', 'done');
+    if (stepIdx < 0) return;
+    if (currentPhase === 'completed') {
+      stepEl.classList.add('done');
+    } else if (currentIdx >= 0) {
+      if (stepIdx < currentIdx) stepEl.classList.add('done');
+      else if (stepIdx === currentIdx) stepEl.classList.add('active');
+    }
+  });
+}
+
+function resetPhaseSteps() {
+  document.querySelectorAll('#phase-steps .step').forEach(function(stepEl) {
+    stepEl.classList.remove('active', 'done');
+  });
+}
+
+function updateProgressGlow(pct) {
+  if ($progressGlow) {
+    $progressGlow.style.left = pct + '%';
+  }
 }
 
 // ─── Summary Toggle ────────────────────────────────────────────────────────
@@ -232,7 +265,7 @@ function handleFileSelect(file) {
     return;
   }
   selectedFile = file;
-  $fileNameDisplay.textContent = file.name + ' (' + formatBytes(file.size) + ')';
+  $fileChipText.textContent = file.name + ' (' + formatBytes(file.size) + ')';
   $fileNameDisplay.classList.remove('hidden');
   $btnUpload.disabled = false;
 }
@@ -247,8 +280,10 @@ $btnUpload.addEventListener('click', async () => {
   const prompt = $promptInput.value.trim();
   if (prompt) formData.append('prompt', prompt);
 
+  var uploadSvg = $btnUpload.querySelector('svg');
+  var uploadSvgHtml = uploadSvg ? uploadSvg.outerHTML : '';
   $btnUpload.classList.add('loading');
-  $btnUpload.textContent = 'Uploading...';
+  $btnUpload.innerHTML = uploadSvgHtml + ' Uploading...';
 
   try {
     const res = await fetch(getBaseUrl() + '/api/jobs', {
@@ -277,8 +312,10 @@ $btnUpload.addEventListener('click', async () => {
     $phaseBadge.className = 'phase-badge queued';
     $progressMsg.textContent = 'Waiting...';
     $progressBar.style.width = '0%';
+    updateProgressGlow(0);
     $detailMsg.textContent = '';
     stopEtaCountdown();
+    resetPhaseSteps();
 
     // Reset log state
     lastDetailMsg = '';
@@ -297,7 +334,7 @@ $btnUpload.addEventListener('click', async () => {
     showError('Upload error: ' + e.message);
   } finally {
     $btnUpload.classList.remove('loading');
-    $btnUpload.textContent = 'Upload & Analyze';
+    $btnUpload.innerHTML = uploadSvgHtml + ' Upload & Analyze';
   }
 });
 
@@ -328,7 +365,9 @@ function startPolling(jobId) {
       $phaseBadge.className = 'phase-badge ' + phase;
       $progressMsg.textContent = msg;
       $progressBar.style.width = pct + '%';
+      updateProgressGlow(pct);
       $detailMsg.textContent = detail;
+      updatePhaseSteps(phase);
 
       // Update ETA — sync from server and start/continue countdown
       if (etaSec > 0 && phase !== 'completed' && phase !== 'failed') {
