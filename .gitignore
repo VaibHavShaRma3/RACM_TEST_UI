@@ -1,0 +1,8 @@
+# Test documents
+*.pdf
+*.xlsx
+*.xls
+*.csv
+
+# OS files
+.DS_Store
