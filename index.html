@@ -3,14 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RACM Test Dashboard</title>
+  <title>RACM Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- Config Bar -->
+  <!-- Header -->
   <header id="config-bar">
-    <h1>RACM Test Dashboard</h1>
+    <div class="header-left">
+      <h1>RACM Generator</h1>
+      <span class="header-subtitle">Risk & Control Matrix Analysis</span>
+    </div>
     <div class="config-row">
       <label>
         API URL
@@ -20,93 +26,121 @@
         API Token
         <input type="text" id="api-token" value="abc" placeholder="Bearer token">
       </label>
-      <button id="btn-health">Check Health</button>
-      <span id="health-dot" class="health-dot" title="Not checked"></span>
+      <button id="btn-health">
+        <span id="health-dot" class="health-dot" title="Not checked"></span>
+        Health
+      </button>
     </div>
   </header>
 
   <!-- Error Banner -->
   <div id="error-banner" class="error-banner hidden"></div>
 
-  <!-- Upload Section -->
-  <section id="upload-section" class="card">
-    <h2>Upload File</h2>
-    <div id="drop-zone" class="drop-zone">
-      <p>Drag & drop a file here, or click to browse</p>
-      <p class="drop-hint">PDF, XLSX, XLS, CSV, PNG, JPG, JPEG, TIFF, BMP, WEBP</p>
-      <input type="file" id="file-input" accept=".pdf,.xlsx,.xls,.csv,.png,.jpg,.jpeg,.tiff,.bmp,.webp" hidden>
-    </div>
-    <div id="file-name-display" class="file-name-display hidden"></div>
-    <label class="prompt-label">
-      Prompt / Instructions (optional)
-      <textarea id="prompt-input" rows="3" placeholder="Additional instructions for the analysis..."></textarea>
-    </label>
-    <button id="btn-upload" disabled>Upload &amp; Analyze</button>
-  </section>
+  <!-- Main Container -->
+  <main class="container">
 
-  <!-- Job Progress -->
-  <section id="progress-section" class="card hidden">
-    <h2>Job Progress</h2>
-    <div class="progress-meta">
-      <span class="label">Job ID:</span> <code id="job-id-display"></code>
-      <span class="label">File:</span> <span id="progress-file-name"></span>
-    </div>
-    <div class="progress-status">
-      <span id="phase-badge" class="phase-badge"></span>
-      <span id="progress-msg"></span>
-    </div>
-    <div class="progress-bar-container">
-      <div id="progress-bar" class="progress-bar" style="width:0%">0%</div>
-    </div>
-    <div id="eta-display" class="eta-display hidden"></div>
-    <div id="detail-msg" class="detail-msg"></div>
-    <div class="activity-log-header">
-      <span>Activity Log</span>
-      <button id="btn-clear-log" class="btn-clear-log">Clear</button>
-    </div>
-    <div id="activity-log" class="activity-log"></div>
-  </section>
-
-  <!-- Summary Card -->
-  <section id="summary-section" class="card hidden">
-    <div class="summary-header" id="summary-toggle">
-      <h2>Executive Summary</h2>
-      <button class="btn-collapse" id="btn-collapse-summary">&#9660;</button>
-    </div>
-    <div id="summary-content" class="summary-content"></div>
-  </section>
-
-  <!-- Results Dashboard -->
-  <section id="results-section" class="card hidden">
-    <h2>Results</h2>
-    <div class="results-controls">
-      <div class="tab-toggle">
-        <button class="tab active" data-tab="detailed">Detailed Entries</button>
-        <button class="tab" data-tab="summary">Summary Entries</button>
+    <!-- Upload Section -->
+    <section id="upload-section" class="card">
+      <h2>Upload Document</h2>
+      <div id="drop-zone" class="drop-zone">
+        <div class="drop-icon">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </div>
+        <p class="drop-text">Drop your file here or <span class="drop-link">browse</span></p>
+        <p class="drop-hint">PDF, XLSX, XLS, CSV, PNG, JPG, TIFF, BMP, WEBP</p>
+        <input type="file" id="file-input" accept=".pdf,.xlsx,.xls,.csv,.png,.jpg,.jpeg,.tiff,.bmp,.webp" hidden>
       </div>
-      <div class="export-buttons">
-        <button id="btn-export-csv">Export CSV</button>
-        <button id="btn-export-json">Export JSON</button>
+      <div id="file-name-display" class="file-name-display hidden"></div>
+      <label class="prompt-label">
+        Instructions <span class="optional-tag">optional</span>
+        <textarea id="prompt-input" rows="2" placeholder="Additional instructions for the analysis..."></textarea>
+      </label>
+      <button id="btn-upload" disabled>Upload & Analyze</button>
+    </section>
+
+    <!-- Job Progress -->
+    <section id="progress-section" class="card hidden">
+      <div class="progress-header">
+        <h2>Processing</h2>
+        <span id="phase-badge" class="phase-badge"></span>
       </div>
-    </div>
-    <div id="entry-count" class="entry-count"></div>
-    <div class="table-wrapper">
-      <table id="results-table">
-        <thead>
-          <tr id="filter-row"></tr>
-          <tr id="header-row"></tr>
-        </thead>
-        <tbody id="results-body"></tbody>
-      </table>
-    </div>
-  </section>
+      <div class="progress-meta">
+        <span id="progress-file-name"></span>
+        <code id="job-id-display"></code>
+      </div>
+      <div class="progress-bar-container">
+        <div id="progress-bar" class="progress-bar" style="width:0%"></div>
+      </div>
+      <div class="progress-info-row">
+        <span id="progress-msg" class="progress-msg"></span>
+        <span id="eta-display" class="eta-display hidden"></span>
+      </div>
+      <div id="detail-msg" class="detail-msg"></div>
+      <details class="log-details" open>
+        <summary class="log-summary">
+          Activity Log
+          <button id="btn-clear-log" class="btn-clear-log">Clear</button>
+        </summary>
+        <div id="activity-log" class="activity-log"></div>
+      </details>
+    </section>
+
+    <!-- Summary Card -->
+    <section id="summary-section" class="card hidden">
+      <div class="summary-header" id="summary-toggle">
+        <h2>Executive Summary</h2>
+        <button class="btn-collapse" id="btn-collapse-summary" aria-label="Toggle summary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+      </div>
+      <div id="summary-content" class="summary-content"></div>
+    </section>
+
+    <!-- Results Dashboard -->
+    <section id="results-section" class="card hidden">
+      <div class="results-header">
+        <h2>Results</h2>
+        <div class="results-controls">
+          <div class="tab-toggle">
+            <button class="tab active" data-tab="detailed">Detailed</button>
+            <button class="tab" data-tab="summary">Summary</button>
+          </div>
+          <div class="export-buttons">
+            <button id="btn-export-csv">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              CSV
+            </button>
+            <button id="btn-export-json">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              JSON
+            </button>
+          </div>
+        </div>
+      </div>
+      <div id="entry-count" class="entry-count"></div>
+      <div class="table-wrapper">
+        <table id="results-table">
+          <thead>
+            <tr id="filter-row"></tr>
+            <tr id="header-row"></tr>
+          </thead>
+          <tbody id="results-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
 
   <!-- Detail Modal -->
   <div id="detail-modal" class="modal-overlay hidden">
     <div class="modal">
       <div class="modal-header">
         <h3>Entry Details</h3>
-        <button id="modal-close">&times;</button>
+        <button id="modal-close" aria-label="Close">&times;</button>
       </div>
       <div id="modal-body" class="modal-body"></div>
     </div>

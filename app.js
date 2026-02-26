@@ -58,6 +58,8 @@ const $modalClose = document.getElementById('modal-close');
 // ─── State ──────────────────────────────────────────────────────────────────
 let selectedFile = null;
 let pollTimer = null;
+let etaCountdownTimer = null;
+let currentEtaSeconds = 0;
 let rawResult = null;
 let currentTab = 'detailed';
 let currentEntries = [];
@@ -91,6 +93,49 @@ function getEntryValue(entry, fieldIndex) {
   return entry[field] ?? entry[key] ?? '';
 }
 
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function formatEta(seconds) {
+  if (seconds <= 0) return '';
+  if (seconds < 60) return '< 1m';
+  var m = Math.floor(seconds / 60);
+  var s = Math.floor(seconds % 60);
+  if (s === 0) return '~' + m + 'm';
+  return '~' + m + 'm ' + s + 's';
+}
+
+function updateEtaDisplay() {
+  if (currentEtaSeconds > 0) {
+    $etaDisplay.textContent = formatEta(currentEtaSeconds) + ' remaining';
+    $etaDisplay.classList.remove('hidden');
+  } else {
+    $etaDisplay.classList.add('hidden');
+  }
+}
+
+function startEtaCountdown() {
+  if (etaCountdownTimer) clearInterval(etaCountdownTimer);
+  etaCountdownTimer = setInterval(function() {
+    if (currentEtaSeconds > 0) {
+      currentEtaSeconds = Math.max(0, currentEtaSeconds - 1);
+      updateEtaDisplay();
+    }
+  }, 1000);
+}
+
+function stopEtaCountdown() {
+  if (etaCountdownTimer) {
+    clearInterval(etaCountdownTimer);
+    etaCountdownTimer = null;
+  }
+  currentEtaSeconds = 0;
+  $etaDisplay.classList.add('hidden');
+}
+
 // ─── Summary Toggle ────────────────────────────────────────────────────────
 $summaryToggle.addEventListener('click', function() {
   $summaryContent.classList.toggle('collapsed');
@@ -98,18 +143,13 @@ $summaryToggle.addEventListener('click', function() {
 });
 
 function simpleMarkdown(text) {
-  // Convert markdown to basic HTML
   var html = escapeHtml(text);
-  // Headers
   html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
   html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
   html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
-  // Bold
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  // Bullet lists
   html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
   html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
-  // Line breaks (but not after block elements)
   html = html.replace(/\n(?!<)/g, '<br>');
   return html;
 }
@@ -134,7 +174,8 @@ function addLogEntry(phase, msg, type) {
   $activityLog.scrollTop = $activityLog.scrollHeight;
 }
 
-$btnClearLog.addEventListener('click', () => {
+$btnClearLog.addEventListener('click', function(e) {
+  e.stopPropagation();
   $activityLog.innerHTML = '';
 });
 
@@ -196,21 +237,6 @@ function handleFileSelect(file) {
   $btnUpload.disabled = false;
 }
 
-function formatBytes(bytes) {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-}
-
-function formatEta(seconds) {
-  if (seconds <= 0) return '';
-  if (seconds < 60) return '< 1 min';
-  var m = Math.floor(seconds / 60);
-  var s = seconds % 60;
-  if (s === 0) return m + 'm';
-  return m + 'm ' + s + 's';
-}
-
 // ─── Upload ─────────────────────────────────────────────────────────────────
 $btnUpload.addEventListener('click', async () => {
   if (!selectedFile) return;
@@ -251,9 +277,8 @@ $btnUpload.addEventListener('click', async () => {
     $phaseBadge.className = 'phase-badge queued';
     $progressMsg.textContent = 'Waiting...';
     $progressBar.style.width = '0%';
-    $progressBar.textContent = '0%';
     $detailMsg.textContent = '';
-    $etaDisplay.classList.add('hidden');
+    stopEtaCountdown();
 
     // Reset log state
     lastDetailMsg = '';
@@ -303,16 +328,15 @@ function startPolling(jobId) {
       $phaseBadge.className = 'phase-badge ' + phase;
       $progressMsg.textContent = msg;
       $progressBar.style.width = pct + '%';
-      $progressBar.textContent = pct + '%';
       $detailMsg.textContent = detail;
 
-      // Update ETA display
-      var etaText = formatEta(etaSec);
-      if (etaText && phase !== 'completed' && phase !== 'failed') {
-        $etaDisplay.textContent = 'Estimated: ~' + etaText + ' remaining';
-        $etaDisplay.classList.remove('hidden');
-      } else {
-        $etaDisplay.classList.add('hidden');
+      // Update ETA — sync from server and start/continue countdown
+      if (etaSec > 0 && phase !== 'completed' && phase !== 'failed') {
+        currentEtaSeconds = etaSec;
+        updateEtaDisplay();
+        if (!etaCountdownTimer) startEtaCountdown();
+      } else if (phase === 'completed' || phase === 'failed') {
+        stopEtaCountdown();
       }
 
       // Log phase transitions
@@ -336,11 +360,13 @@ function startPolling(jobId) {
       if (phase === 'completed') {
         clearInterval(pollTimer);
         pollTimer = null;
+        stopEtaCountdown();
         addLogEntry('done', 'Job completed successfully!', 'complete');
         fetchResults(jobId);
       } else if (phase === 'failed') {
         clearInterval(pollTimer);
         pollTimer = null;
+        stopEtaCountdown();
         addLogEntry('error', 'Job failed: ' + msg, 'error');
         showError('Job failed: ' + msg);
       }
@@ -397,7 +423,6 @@ async function fetchResults(jobId) {
 function renderResults() {
   if (!rawResult) return;
 
-  // Handle both direct response and wrapped response
   const result = rawResult.result || rawResult;
 
   const entries = currentTab === 'detailed'
@@ -406,13 +431,11 @@ function renderResults() {
 
   currentEntries = entries;
 
-  // Build header + filter row
   $filterRow.innerHTML = '';
   $headerRow.innerHTML = '';
   columnFilters = {};
 
   RACM_FIELDS.forEach((field, i) => {
-    // Filter cell
     const fth = document.createElement('th');
     const inp = document.createElement('input');
     inp.type = 'text';
@@ -422,7 +445,6 @@ function renderResults() {
     fth.appendChild(inp);
     $filterRow.appendChild(fth);
 
-    // Header cell
     const th = document.createElement('th');
     th.textContent = field;
     $headerRow.appendChild(th);
@@ -444,7 +466,7 @@ function renderRows(entries) {
 
   $entryCount.textContent = filtered.length + ' of ' + entries.length + ' entries';
 
-  filtered.forEach((entry, rowIdx) => {
+  filtered.forEach((entry) => {
     const tr = document.createElement('tr');
     tr.addEventListener('click', () => openDetailModal(entry));
 
@@ -454,15 +476,14 @@ function renderRows(entries) {
       td.textContent = val;
       td.title = val;
 
-      // Special column styling
       if (field === 'Source Quote') {
         td.classList.add('col-source-quote');
       } else if (field === 'Extraction Confidence') {
         td.classList.add('col-extraction-confidence');
         const lower = val.toLowerCase();
-        if (lower === 'high') td.classList.add('high');
-        else if (lower === 'medium') td.classList.add('medium');
-        else if (lower === 'low') td.classList.add('low');
+        if (lower === 'extracted') td.classList.add('extracted');
+        else if (lower === 'inferred') td.classList.add('inferred');
+        else if (lower === 'partial') td.classList.add('partial');
       }
 
       tr.appendChild(td);
@@ -485,7 +506,6 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
     currentTab = tab.dataset.tab;
-    // Reset filters
     $filterRow.querySelectorAll('input').forEach(inp => inp.value = '');
     columnFilters = {};
     renderResults();
@@ -528,11 +548,10 @@ document.addEventListener('keydown', (e) => {
 
 // ─── Export ─────────────────────────────────────────────────────────────────
 function getExportBaseName() {
-  // Derive SOP name from uploaded file: strip extension, replace spaces/special chars
   var sopName = (selectedFile ? selectedFile.name : 'document')
-    .replace(/\.[^.]+$/, '')          // remove extension
-    .replace(/[^a-zA-Z0-9_\-]+/g, '_') // sanitize
-    .replace(/(^_|_$)/g, '');          // trim underscores
+    .replace(/\.[^.]+$/, '')
+    .replace(/[^a-zA-Z0-9_\-]+/g, '_')
+    .replace(/(^_|_$)/g, '');
   var tabLabel = currentTab === 'summary' ? 'summary' : 'detailed';
   return 'RACM_' + sopName + '_' + tabLabel;
 }
@@ -540,7 +559,6 @@ function getExportBaseName() {
 $btnExportCsv.addEventListener('click', () => {
   if (!currentEntries.length) return;
 
-  // Get the currently filtered entries
   const filtered = currentEntries.filter(entry => {
     return Object.entries(columnFilters).every(([colIdx, filterVal]) => {
       if (!filterVal) return true;
