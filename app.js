@@ -36,7 +36,6 @@ const $phaseBadge = document.getElementById('phase-badge');
 const $progressMsg = document.getElementById('progress-msg');
 const $progressBar = document.getElementById('progress-bar');
 const $detailMsg = document.getElementById('detail-msg');
-const $etaDisplay = document.getElementById('eta-display');
 const $activityLog = document.getElementById('activity-log');
 const $btnClearLog = document.getElementById('btn-clear-log');
 const $resultsSection = document.getElementById('results-section');
@@ -62,8 +61,6 @@ const $btnSidebarToggle = document.getElementById('btn-sidebar-toggle');
 // ─── State ──────────────────────────────────────────────────────────────────
 let selectedFile = null;
 let pollTimer = null;
-let etaCountdownTimer = null;
-let currentEtaSeconds = 0;
 let rawResult = null;
 let currentTab = 'detailed';
 let currentEntries = [];
@@ -104,43 +101,6 @@ function formatBytes(bytes) {
   if (bytes < 1024) return bytes + ' B';
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-}
-
-function formatEta(seconds) {
-  if (seconds <= 0) return '';
-  if (seconds < 60) return '< 1m';
-  var m = Math.floor(seconds / 60);
-  var s = Math.floor(seconds % 60);
-  if (s === 0) return '~' + m + 'm';
-  return '~' + m + 'm ' + s + 's';
-}
-
-function updateEtaDisplay() {
-  if (currentEtaSeconds > 0) {
-    $etaDisplay.textContent = formatEta(currentEtaSeconds) + ' remaining';
-    $etaDisplay.classList.remove('hidden');
-  } else {
-    $etaDisplay.classList.add('hidden');
-  }
-}
-
-function startEtaCountdown() {
-  if (etaCountdownTimer) clearInterval(etaCountdownTimer);
-  etaCountdownTimer = setInterval(function() {
-    if (currentEtaSeconds > 0) {
-      currentEtaSeconds = Math.max(0, currentEtaSeconds - 1);
-      updateEtaDisplay();
-    }
-  }, 1000);
-}
-
-function stopEtaCountdown() {
-  if (etaCountdownTimer) {
-    clearInterval(etaCountdownTimer);
-    etaCountdownTimer = null;
-  }
-  currentEtaSeconds = 0;
-  $etaDisplay.classList.add('hidden');
 }
 
 // ─── Phase Steps ──────────────────────────────────────────────────────────
@@ -335,7 +295,6 @@ $btnUpload.addEventListener('click', async () => {
     $progressMsg.textContent = 'Waiting...';
     $progressBar.style.width = '0%';
     $detailMsg.textContent = '';
-    stopEtaCountdown();
     resetPhaseSteps();
 
     // Reset log state
@@ -383,25 +342,14 @@ function startPolling(jobId) {
       const pct = data.progress_pct ?? 0;
       const msg = data.progress_msg || '';
       const detail = data.detail_msg || '';
-      const etaSec = data.eta_seconds ?? 0;
 
       // Update UI elements
       $phaseBadge.textContent = phase;
       $phaseBadge.className = 'phase-badge ' + phase;
       $progressMsg.textContent = msg;
       $progressBar.style.width = pct + '%';
-  
       $detailMsg.textContent = detail;
       updatePhaseSteps(phase);
-
-      // Update ETA — sync from server and start/continue countdown
-      if (etaSec > 0 && phase !== 'completed' && phase !== 'failed') {
-        currentEtaSeconds = etaSec;
-        updateEtaDisplay();
-        if (!etaCountdownTimer) startEtaCountdown();
-      } else if (phase === 'completed' || phase === 'failed') {
-        stopEtaCountdown();
-      }
 
       // Log phase transitions
       if (phase !== lastPhase && phase !== 'unknown') {
@@ -424,7 +372,6 @@ function startPolling(jobId) {
       if (phase === 'completed') {
         clearInterval(pollTimer);
         pollTimer = null;
-        stopEtaCountdown();
         isProcessing = false;
         $btnUpload.disabled = !selectedFile;
         addLogEntry('done', 'Job completed successfully!', 'complete');
@@ -432,7 +379,6 @@ function startPolling(jobId) {
       } else if (phase === 'failed') {
         clearInterval(pollTimer);
         pollTimer = null;
-        stopEtaCountdown();
         isProcessing = false;
         $btnUpload.disabled = !selectedFile;
         addLogEntry('error', 'Job failed: ' + msg, 'error');

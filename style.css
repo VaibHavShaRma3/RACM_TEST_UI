@@ -533,16 +533,6 @@ body {
 
 .progress-msg { font-size: 0.75rem; color: var(--text-secondary); }
 
-.eta-display {
-  font-size: 0.725rem;
-  font-weight: 600;
-  color: var(--accent);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.eta-display.hidden { display: none; }
-
 /* Detail Message */
 .detail-msg {
   margin-top: 0.625rem;
