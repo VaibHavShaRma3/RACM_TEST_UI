@@ -13,9 +13,7 @@ const FIELD_KEYS = RACM_FIELDS.map(f =>
   f.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/(^_|_$)/g, '')
 );
 
-const ACCEPTED_TYPES = [
-  '.pdf', '.xlsx', '.xls', '.csv', '.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.webp'
-];
+const ACCEPTED_TYPES = ['.pdf', '.xlsx', '.xls', '.csv'];
 
 const POLL_INTERVAL = 2000;
 
@@ -37,7 +35,6 @@ const $progressFileName = document.getElementById('progress-file-name');
 const $phaseBadge = document.getElementById('phase-badge');
 const $progressMsg = document.getElementById('progress-msg');
 const $progressBar = document.getElementById('progress-bar');
-const $progressGlow = document.getElementById('progress-glow');
 const $detailMsg = document.getElementById('detail-msg');
 const $etaDisplay = document.getElementById('eta-display');
 const $activityLog = document.getElementById('activity-log');
@@ -56,6 +53,8 @@ const $btnCollapseSummary = document.getElementById('btn-collapse-summary');
 const $detailModal = document.getElementById('detail-modal');
 const $modalBody = document.getElementById('modal-body');
 const $modalClose = document.getElementById('modal-close');
+const $btnSettings = document.getElementById('btn-settings');
+const $settingsPanel = document.getElementById('settings-panel');
 
 // ─── State ──────────────────────────────────────────────────────────────────
 let selectedFile = null;
@@ -163,11 +162,11 @@ function resetPhaseSteps() {
   });
 }
 
-function updateProgressGlow(pct) {
-  if ($progressGlow) {
-    $progressGlow.style.left = pct + '%';
-  }
-}
+// ─── Settings Toggle ──────────────────────────────────────────────────────
+$btnSettings.addEventListener('click', function() {
+  $settingsPanel.classList.toggle('hidden');
+  $btnSettings.classList.toggle('active');
+});
 
 // ─── Summary Toggle ────────────────────────────────────────────────────────
 $summaryToggle.addEventListener('click', function() {
@@ -365,7 +364,7 @@ function startPolling(jobId) {
       $phaseBadge.className = 'phase-badge ' + phase;
       $progressMsg.textContent = msg;
       $progressBar.style.width = pct + '%';
-      updateProgressGlow(pct);
+  
       $detailMsg.textContent = detail;
       updatePhaseSteps(phase);
 
