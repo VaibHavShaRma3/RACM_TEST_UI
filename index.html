@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -127,7 +128,10 @@
       <section id="progress-section" class="card hidden">
         <div class="card-header">
           <h2>Processing</h2>
-          <span id="phase-badge" class="phase-badge"></span>
+          <div class="card-header-right">
+            <span id="phase-badge" class="phase-badge"></span>
+            <button id="btn-cancel-job" class="btn-secondary btn-sm btn-cancel">Cancel</button>
+          </div>
         </div>
         <div class="progress-meta">
           <div class="meta-file">
@@ -197,8 +201,17 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 JSON
               </button>
+              <button id="btn-export-xlsx" class="btn-primary btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                XLSX
+              </button>
             </div>
           </div>
+        </div>
+        <div id="edit-actions" class="edit-actions hidden">
+          <span id="unsaved-indicator" class="unsaved-indicator">Unsaved changes</span>
+          <button id="btn-save-changes" class="btn-primary btn-sm">Save Changes</button>
+          <button id="btn-discard-changes" class="btn-secondary btn-sm">Discard Changes</button>
         </div>
         <div id="entry-count" class="entry-count"></div>
         <div class="table-wrapper">
@@ -209,6 +222,23 @@
             </thead>
             <tbody id="results-body"></tbody>
           </table>
+        </div>
+        <div id="pagination-controls" class="pagination-controls">
+          <div class="page-size">
+            Show:
+            <button class="page-size-btn active" data-size="25">25</button>
+            <button class="page-size-btn" data-size="50">50</button>
+            <button class="page-size-btn" data-size="100">100</button>
+            <button class="page-size-btn" data-size="all">All</button>
+          </div>
+          <div class="page-nav">
+            <button id="btn-prev-page" class="btn-icon">&laquo;</button>
+            <span id="page-info">Page 1 of 1</span>
+            <button id="btn-next-page" class="btn-icon">&raquo;</button>
+          </div>
+        </div>
+        <div class="results-footer">
+          <button id="btn-delete-report" class="btn-secondary btn-sm btn-delete-report">Delete Report</button>
         </div>
       </section>
 
