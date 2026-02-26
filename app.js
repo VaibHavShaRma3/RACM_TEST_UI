@@ -311,7 +311,6 @@ $btnUpload.addEventListener('click', async () => {
     $phaseBadge.className = 'phase-badge queued';
     $progressMsg.textContent = 'Waiting...';
     $progressBar.style.width = '0%';
-    updateProgressGlow(0);
     $detailMsg.textContent = '';
     stopEtaCountdown();
     resetPhaseSteps();
