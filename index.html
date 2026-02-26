@@ -11,173 +11,210 @@
 </head>
 <body>
 
-  <!-- Header -->
-  <header id="config-bar">
-    <div class="header-left">
-      <div class="logo">
-        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-          <rect width="28" height="28" rx="8" fill="#3b82f6"/>
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-logo">
+        <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
+          <rect width="28" height="28" rx="8" fill="#7c3aed"/>
           <path d="M8 9h12M8 14h7M8 19h9" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
         </svg>
+        <span class="sidebar-brand">Irame.ai</span>
       </div>
-      <h1>RACM Generator</h1>
-    </div>
-    <button id="btn-settings" class="btn-icon" aria-label="Settings" title="Settings">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="3"/>
-        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-      </svg>
-    </button>
-  </header>
-
-  <!-- Settings Panel -->
-  <div id="settings-panel" class="settings-panel hidden">
-    <div class="settings-inner">
-      <div class="input-group">
-        <label for="api-url">API Endpoint</label>
-        <input type="text" id="api-url" value="https://racm-generator-api.onrender.com" placeholder="https://racm-generator-api.onrender.com">
-      </div>
-      <div class="input-group">
-        <label for="api-token">Auth Token</label>
-        <input type="text" id="api-token" value="qwerty12345" placeholder="Bearer token">
-      </div>
-      <button id="btn-health" class="btn-secondary btn-sm">
-        <span id="health-dot" class="health-dot" title="Not checked"></span>
-        Check Connection
-      </button>
-    </div>
-  </div>
-
-  <!-- Error Banner -->
-  <div id="error-banner" class="error-banner hidden"></div>
-
-  <!-- Main -->
-  <main class="container">
-
-    <!-- Upload -->
-    <section id="upload-section" class="card">
-      <div class="card-header">
-        <h2>Upload Document</h2>
-      </div>
-      <div id="drop-zone" class="drop-zone">
-        <div class="drop-icon">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="17 8 12 3 7 8"/>
-            <line x1="12" y1="3" x2="12" y2="15"/>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-page="generator">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
           </svg>
-        </div>
-        <p class="drop-text">Drop your file here or <span class="drop-link">browse</span></p>
-        <p class="drop-hint">Supports PDF, Excel, and CSV files</p>
-        <input type="file" id="file-input" accept=".pdf,.xlsx,.xls,.csv" hidden>
-      </div>
-      <div id="file-name-display" class="file-chip hidden">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        <span id="file-chip-text"></span>
-      </div>
-      <div class="prompt-row">
-        <label for="prompt-input">
-          Instructions <span class="optional">optional</span>
-        </label>
-        <textarea id="prompt-input" rows="2" placeholder="e.g. Focus on financial reporting risks..."></textarea>
-      </div>
-      <button id="btn-upload" class="btn-primary" disabled>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        Upload &amp; Analyze
+          RACM Generator
+        </a>
+        <a href="#" class="nav-item disabled" data-page="history">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          History
+        </a>
+        <a href="#" class="nav-item disabled" data-page="reports">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+          Reports
+        </a>
+      </nav>
+    </div>
+    <div class="sidebar-bottom">
+      <a href="#" class="nav-item" id="nav-settings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        Configuration
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Wrapper -->
+  <div class="main-wrapper">
+
+    <!-- Top Bar -->
+    <header id="config-bar">
+      <h1>RACM Generator</h1>
+      <button id="btn-sidebar-toggle" class="btn-icon sidebar-toggle" aria-label="Toggle menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
-    </section>
+    </header>
 
-    <!-- Progress -->
-    <section id="progress-section" class="card hidden">
-      <div class="card-header">
-        <h2>Processing</h2>
-        <span id="phase-badge" class="phase-badge"></span>
-      </div>
-      <div class="progress-meta">
-        <div class="meta-file">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          <span id="progress-file-name"></span>
+    <!-- Settings Panel -->
+    <div id="settings-panel" class="settings-panel hidden">
+      <div class="settings-inner">
+        <div class="input-group">
+          <label for="api-url">API Endpoint</label>
+          <input type="text" id="api-url" value="https://racm-generator-api.onrender.com" placeholder="https://racm-generator-api.onrender.com">
         </div>
-        <code id="job-id-display"></code>
-      </div>
-
-      <!-- Progress Bar -->
-      <div class="progress-track">
-        <div id="progress-bar" class="progress-fill" style="width:0%"></div>
-      </div>
-      <div class="progress-info">
-        <span id="progress-msg" class="progress-msg"></span>
-        <span id="eta-display" class="eta-display hidden"></span>
-      </div>
-
-      <!-- Detail -->
-      <div id="detail-msg" class="detail-msg"></div>
-
-      <!-- Phase Steps -->
-      <div id="phase-steps" class="phase-steps">
-        <div class="step" data-phase="extracting"><span class="step-dot"></span><span class="step-label">Extract</span></div>
-        <div class="step" data-phase="chunking"><span class="step-dot"></span><span class="step-label">Chunk</span></div>
-        <div class="step" data-phase="analyzing"><span class="step-dot"></span><span class="step-label">Analyze</span></div>
-        <div class="step" data-phase="consolidating"><span class="step-dot"></span><span class="step-label">Consolidate</span></div>
-        <div class="step" data-phase="deduplicating"><span class="step-dot"></span><span class="step-label">Deduplicate</span></div>
-        <div class="step" data-phase="summarizing"><span class="step-dot"></span><span class="step-label">Summarize</span></div>
-      </div>
-
-      <!-- Activity Log -->
-      <details class="log-details">
-        <summary class="log-toggle">
-          <span>Activity Log</span>
-          <button id="btn-clear-log" class="btn-ghost btn-xs">Clear</button>
-        </summary>
-        <div id="activity-log" class="activity-log"></div>
-      </details>
-    </section>
-
-    <!-- Summary -->
-    <section id="summary-section" class="card hidden">
-      <div class="card-header clickable" id="summary-toggle">
-        <h2>Executive Summary</h2>
-        <button class="btn-icon" id="btn-collapse-summary" aria-label="Toggle">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+        <div class="input-group">
+          <label for="api-token">Auth Token</label>
+          <input type="text" id="api-token" value="qwerty12345" placeholder="Bearer token">
+        </div>
+        <button id="btn-health" class="btn-secondary btn-sm">
+          <span id="health-dot" class="health-dot" title="Not checked"></span>
+          Check Connection
         </button>
       </div>
-      <div id="summary-content" class="summary-content"></div>
-    </section>
+    </div>
 
-    <!-- Results -->
-    <section id="results-section" class="card hidden">
-      <div class="card-header">
-        <h2>Results</h2>
-        <div class="results-actions">
-          <div class="tab-group">
-            <button class="tab active" data-tab="detailed">Detailed</button>
-            <button class="tab" data-tab="summary">Summary</button>
+    <!-- Error Banner -->
+    <div id="error-banner" class="error-banner hidden"></div>
+
+    <!-- Main Content -->
+    <main class="container">
+
+      <!-- Upload -->
+      <section id="upload-section" class="card">
+        <div class="card-header">
+          <h2>Upload Document</h2>
+        </div>
+        <div id="drop-zone" class="drop-zone">
+          <div class="drop-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
           </div>
-          <div class="export-group">
-            <button id="btn-export-csv" class="btn-secondary btn-sm">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              CSV
-            </button>
-            <button id="btn-export-json" class="btn-secondary btn-sm">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              JSON
-            </button>
+          <p class="drop-text">Drop your file here or <span class="drop-link">browse</span></p>
+          <p class="drop-hint">Supports PDF, Excel, and CSV files</p>
+          <input type="file" id="file-input" accept=".pdf,.xlsx,.xls,.csv" hidden>
+        </div>
+        <div id="file-name-display" class="file-chip hidden">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span id="file-chip-text"></span>
+          <button id="btn-clear-file" class="file-chip-remove" aria-label="Remove file">&times;</button>
+        </div>
+        <div class="prompt-row">
+          <label for="prompt-input">
+            Instructions <span class="optional">optional</span>
+          </label>
+          <textarea id="prompt-input" rows="2" placeholder="e.g. Focus on financial reporting risks..."></textarea>
+        </div>
+        <button id="btn-upload" class="btn-primary" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Upload &amp; Analyze
+        </button>
+      </section>
+
+      <!-- Progress -->
+      <section id="progress-section" class="card hidden">
+        <div class="card-header">
+          <h2>Processing</h2>
+          <span id="phase-badge" class="phase-badge"></span>
+        </div>
+        <div class="progress-meta">
+          <div class="meta-file">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span id="progress-file-name"></span>
+          </div>
+          <code id="job-id-display"></code>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-track">
+          <div id="progress-bar" class="progress-fill" style="width:0%"></div>
+        </div>
+        <div class="progress-info">
+          <span id="progress-msg" class="progress-msg"></span>
+          <span id="eta-display" class="eta-display hidden"></span>
+        </div>
+
+        <!-- Detail -->
+        <div id="detail-msg" class="detail-msg"></div>
+
+        <!-- Phase Steps -->
+        <div id="phase-steps" class="phase-steps">
+          <div class="step" data-phase="extracting"><span class="step-dot"></span><span class="step-label">Extract</span></div>
+          <div class="step" data-phase="chunking"><span class="step-dot"></span><span class="step-label">Chunk</span></div>
+          <div class="step" data-phase="analyzing"><span class="step-dot"></span><span class="step-label">Analyze</span></div>
+          <div class="step" data-phase="consolidating"><span class="step-dot"></span><span class="step-label">Consolidate</span></div>
+          <div class="step" data-phase="deduplicating"><span class="step-dot"></span><span class="step-label">Deduplicate</span></div>
+          <div class="step" data-phase="summarizing"><span class="step-dot"></span><span class="step-label">Summarize</span></div>
+        </div>
+
+        <!-- Activity Log -->
+        <details class="log-details">
+          <summary class="log-toggle">
+            <span>Activity Log</span>
+            <button id="btn-clear-log" class="btn-ghost btn-xs">Clear</button>
+          </summary>
+          <div id="activity-log" class="activity-log"></div>
+        </details>
+      </section>
+
+      <!-- Summary -->
+      <section id="summary-section" class="card hidden">
+        <div class="card-header clickable" id="summary-toggle">
+          <h2>Executive Summary</h2>
+          <button class="btn-icon" id="btn-collapse-summary" aria-label="Toggle">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </div>
+        <div id="summary-content" class="summary-content"></div>
+      </section>
+
+      <!-- Results -->
+      <section id="results-section" class="card hidden">
+        <div class="card-header">
+          <h2>Results</h2>
+          <div class="results-actions">
+            <div class="tab-group">
+              <button class="tab active" data-tab="detailed">Detailed</button>
+              <button class="tab" data-tab="summary">Summary</button>
+            </div>
+            <div class="export-group">
+              <button id="btn-export-csv" class="btn-secondary btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                CSV
+              </button>
+              <button id="btn-export-json" class="btn-secondary btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                JSON
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-      <div id="entry-count" class="entry-count"></div>
-      <div class="table-wrapper">
-        <table id="results-table">
-          <thead>
-            <tr id="filter-row"></tr>
-            <tr id="header-row"></tr>
-          </thead>
-          <tbody id="results-body"></tbody>
-        </table>
-      </div>
-    </section>
+        <div id="entry-count" class="entry-count"></div>
+        <div class="table-wrapper">
+          <table id="results-table">
+            <thead>
+              <tr id="filter-row"></tr>
+              <tr id="header-row"></tr>
+            </thead>
+            <tbody id="results-body"></tbody>
+          </table>
+        </div>
+      </section>
 
-  </main>
+    </main>
+  </div>
 
   <!-- Modal -->
   <div id="detail-modal" class="modal-overlay hidden">

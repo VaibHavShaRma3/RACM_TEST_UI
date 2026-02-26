@@ -53,8 +53,11 @@ const $btnCollapseSummary = document.getElementById('btn-collapse-summary');
 const $detailModal = document.getElementById('detail-modal');
 const $modalBody = document.getElementById('modal-body');
 const $modalClose = document.getElementById('modal-close');
-const $btnSettings = document.getElementById('btn-settings');
 const $settingsPanel = document.getElementById('settings-panel');
+const $btnClearFile = document.getElementById('btn-clear-file');
+const $navSettings = document.getElementById('nav-settings');
+const $sidebar = document.getElementById('sidebar');
+const $btnSidebarToggle = document.getElementById('btn-sidebar-toggle');
 
 // ─── State ──────────────────────────────────────────────────────────────────
 let selectedFile = null;
@@ -68,6 +71,7 @@ let columnFilters = {};
 let lastDetailMsg = '';
 let lastProgressMsg = '';
 let lastPhase = '';
+let isProcessing = false;
 
 const PHASE_ORDER = ['extracting', 'chunking', 'analyzing', 'consolidating', 'deduplicating', 'summarizing'];
 
@@ -163,9 +167,15 @@ function resetPhaseSteps() {
 }
 
 // ─── Settings Toggle ──────────────────────────────────────────────────────
-$btnSettings.addEventListener('click', function() {
+$navSettings.addEventListener('click', function(e) {
+  e.preventDefault();
   $settingsPanel.classList.toggle('hidden');
-  $btnSettings.classList.toggle('active');
+  $navSettings.classList.toggle('active');
+});
+
+// ─── Sidebar Mobile Toggle ────────────────────────────────────────────────
+$btnSidebarToggle.addEventListener('click', function() {
+  $sidebar.classList.toggle('open');
 });
 
 // ─── Summary Toggle ────────────────────────────────────────────────────────
@@ -266,12 +276,25 @@ function handleFileSelect(file) {
   selectedFile = file;
   $fileChipText.textContent = file.name + ' (' + formatBytes(file.size) + ')';
   $fileNameDisplay.classList.remove('hidden');
-  $btnUpload.disabled = false;
+  $btnUpload.disabled = isProcessing;
 }
+
+function clearFileSelection() {
+  selectedFile = null;
+  $fileInput.value = '';
+  $fileNameDisplay.classList.add('hidden');
+  $fileChipText.textContent = '';
+  $btnUpload.disabled = true;
+}
+
+$btnClearFile.addEventListener('click', function(e) {
+  e.stopPropagation();
+  clearFileSelection();
+});
 
 // ─── Upload ─────────────────────────────────────────────────────────────────
 $btnUpload.addEventListener('click', async () => {
-  if (!selectedFile) return;
+  if (!selectedFile || isProcessing) return;
   hideError();
 
   const formData = new FormData();
@@ -322,6 +345,10 @@ $btnUpload.addEventListener('click', async () => {
     $activityLog.innerHTML = '';
     addLogEntry('system', 'Job submitted: ' + jobId, 'msg');
     addLogEntry('system', 'File: ' + selectedFile.name + ' (' + formatBytes(selectedFile.size) + ')', 'msg');
+
+    // Lock upload during processing
+    isProcessing = true;
+    $btnUpload.disabled = true;
 
     // Hide results and summary from previous run
     $resultsSection.classList.add('hidden');
@@ -398,12 +425,16 @@ function startPolling(jobId) {
         clearInterval(pollTimer);
         pollTimer = null;
         stopEtaCountdown();
+        isProcessing = false;
+        $btnUpload.disabled = !selectedFile;
         addLogEntry('done', 'Job completed successfully!', 'complete');
         fetchResults(jobId);
       } else if (phase === 'failed') {
         clearInterval(pollTimer);
         pollTimer = null;
         stopEtaCountdown();
+        isProcessing = false;
+        $btnUpload.disabled = !selectedFile;
         addLogEntry('error', 'Job failed: ' + msg, 'error');
         showError('Job failed: ' + msg);
       }
